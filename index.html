@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/style.css">
+    <title>2048</title>
+</head>
+<body>
+
+<div id='root'></div>
+
+<!-- Summary Template -->
+<script type='text/html' id='summaryTemplate'>
+    <header class='header'>
+        <h1 id='title'>2048</h1>
+        <section class='results'>
+            <div class='score'>
+                <h2>Score</h2>
+                <div id="scoreResult">{{totalScore}}</div>
+            </div>
+            <div class='best'>
+                <h2>Best</h2>
+                <div id="scoreResult">{{bestScore}}</div>
+            </div>
+        </section>
+    </header>
+</script>
+
+<!-- Matrix Template -->
+<script type='text/html' id='matrixTemplate'>
+    <section>
+        {{matrix}}
+    </section>
+    <section id="buttonBlock">
+        <button id="newGameBtn">New Game</button>
+    </section>
+</script>
+    
+<script src='./utils/util.js'></script>
+<script src='./models/summaryModel.js'></script>
+<script src='./models/matrixModel.js'></script>
+<script src="./views/summaryView.js"></script>
+<script src="./views/matrixView.js"></script>
+<script src="./views/appView.js"></script>
+</body>
+</html>
