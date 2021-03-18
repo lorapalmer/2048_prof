@@ -10,10 +10,13 @@ MatrixView.prototype = Object.create(BaseView.prototype);
 MatrixView.prototype.constructor = MatrixView;
 
 MatrixView.prototype.beforeRender = function () {
+    this.matrixModel.startNewGame();
     this.matrixModel.subscribe('changeData', this.reRender, this);
 }
 
 MatrixView.prototype.render = function() {
+    this.matrixModel.isFirstRender = false;
+    
     var i, j, attributes = this.matrixModel.attributes, str = '';
 
     for(i = 0; i < attributes.size.width; i += 1) {
@@ -29,6 +32,16 @@ MatrixView.prototype.render = function() {
 
 MatrixView.prototype.afterRender = function () {
     window.onkeydown = this.controller.onKeyPress.bind(this.controller);
+    var newGameButton = document.getElementById('newGameBtn');
+    newGameButton.addEventListener('click', this.controller.onClickNewGame.bind(this.controller));    
+}
+
+MatrixView.prototype.beforeUpdate = function() {    
+    var newGameButton = document.getElementById('newGameBtn');
+    newGameButton.removeEventListener('click', this.controller.onClickNewGame);
+}
+
+MatrixView.prototype.afterUpdate = function() {    
     var newGameButton = document.getElementById('newGameBtn');
     newGameButton.addEventListener('click', this.controller.onClickNewGame.bind(this.controller));
 }
