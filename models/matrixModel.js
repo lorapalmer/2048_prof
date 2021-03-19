@@ -28,6 +28,8 @@ MatrixModel.prototype = Object.create(BaseModel.prototype);
 MatrixModel.prototype.constructor = MatrixModel;
 
 MatrixModel.prototype.displayActionResults = function(key) {    
+    console.log(key);
+    this.addRandomValues(this.initCellsNumber);
     this.publish('changeData');
 }
 
@@ -44,13 +46,25 @@ MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
 
     var context = this;
 
-    function getRandomFreeCellIndex() {            
-        return  Math.round(Math.random() * (context.freeCellsCoords.length - 1));
+    function getRandomFreeCellIndex() {   
+        if (context.freeCellsCoords.length > 0) {
+            return Math.round(Math.random() * (context.freeCellsCoords.length - 1));
+        } else {            
+            return -1;
+        }
+        
     }  
 
     for (i = 0; i < initCellsNumber; i += 1) {                
         freeCellIndex = getRandomFreeCellIndex();
-        [row, column] = context.freeCellsCoords[freeCellIndex];
+        //in case if user will continue pushing arrow buttons after defeat
+        if (freeCellIndex >= 0) {
+           [row, column] = context.freeCellsCoords[freeCellIndex]; 
+        } else {
+            console.error('defeat!');
+            return;
+        }
+        
         //generate some value to fill cell.                
         randomValue = Math.random();
         if (randomValue < chance) {
