@@ -10,12 +10,11 @@ MatrixView.prototype = Object.create(BaseView.prototype);
 MatrixView.prototype.constructor = MatrixView;
 
 MatrixView.prototype.beforeRender = function () {
-    this.matrixModel.startNewGame();
     this.matrixModel.subscribe('changeData', this.reRender, this);
 }
 
 MatrixView.prototype.render = function() {
-    this.matrixModel.isFirstRender = false;
+    console.log('render');
     
     var i, j, attributes = this.matrixModel.attributes, str = '';
 

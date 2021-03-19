@@ -18,54 +18,74 @@ function MatrixModel() {
         return instance;
     }
 
-    //Needed to detect defeat
-    var freeCellsCount = this.attributes.size.width * this.attributes.size.height; 
-    
-    var isFirstRender = true;
+    this.initFreeCellsArray();    
+    this.base = 2;
+    this.initCellsNumber = 2;
+    this.addRandomValues(this.initCellsNumber);    
 }
 
 MatrixModel.prototype = Object.create(BaseModel.prototype);
 MatrixModel.prototype.constructor = MatrixModel;
 
-MatrixModel.prototype.displayActionResults = function (key) {    
+MatrixModel.prototype.displayActionResults = function(key) {    
     this.publish('changeData');
 }
 
-MatrixModel.prototype.startNewGame = function () {    
-    var row, column, i, initCellsNumber = 2, maxNumberOfCycles = 1000;
+MatrixModel.prototype.startNewGame = function() {          
+    this.clearMatrix();
+    this.addRandomValues(this.initCellsNumber);               
+    this.publish('changeData');
+}
+
+MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
+    var row, column, i, freeCellIndex, randomValue, value, 
+        chance = 0.5, //first value drop chance
+        randomRangeOffset = 1;
 
     var context = this;
 
-    function getRandomCellCoords() {
-        var row = Math.round(Math.random() * (context.attributes.size.height - 1));
-        var column = Math.round(Math.random() * (context.attributes.size.width - 1));        
-        return [row, column];
-    }    
+    function getRandomFreeCellIndex() {            
+        return  Math.round(Math.random() * (context.freeCellsCoords.length - 1));
+    }  
 
+    for (i = 0; i < initCellsNumber; i += 1) {                
+        freeCellIndex = getRandomFreeCellIndex();
+        [row, column] = context.freeCellsCoords[freeCellIndex];
+        //generate some value to fill cell.                
+        randomValue = Math.random();
+        if (randomValue < chance) {
+            value = Math.floor(randomValue + randomRangeOffset) * context.base;
+        } else if (randomValue >= chance) {
+            value = Math.ceil(randomValue + randomRangeOffset) * context.base;
+        }
+        
+        context.attributes.grid[row][column] = value;        
+
+        //delete 1 current item from freeCellsCoords array
+        context.freeCellsCoords.splice(freeCellIndex, 1);
+    } 
+}
+
+MatrixModel.prototype.clearMatrix = function() {
     //clearing cells
     for (i = 0; i < this.attributes.size.height; i += 1) {
         for (j = 0; j < this.attributes.size.width; j += 1) {
             this.attributes.grid[i][j] = '';
         }
     }
+    this.initFreeCellsArray();
+}
 
-    for (i = 0; i < initCellsNumber; i += 1) {
-        j = 0;
-        do {  
-            //limits the number of loop iterations. Also can be used as defeat indicator (no more free cells left).
-            if (j > maxNumberOfCycles) {
-                console.error('There are too many cycles!');
-                this.publish('changeData');
-                return;
-            }
-            j++;
-            [row, column] = getRandomCellCoords();            
-        } while (this.attributes.grid[row][column]);
-
-        this.attributes.grid[row][column] = Math.round(Math.random() + 1) * 2; 
-    }            
-
-    //to prevent unnecessary subscriber renders during initialization
-    if (!this.isFirstRender) this.publish('changeData');
+MatrixModel.prototype.initFreeCellsArray = function() {
+    //Needed to detect defeat    
+    this.freeCellsCoords = new Array(this.attributes.size.height * this.attributes.size.width);
+    var i, j, cellCoords;
+    for (i = 0; i < this.attributes.size.height; i += 1) {
+        for (j = 0; j < this.attributes.size.width; j += 1) {
+            cellCoords = [i, j];             
+            this.freeCellsCoords[i * this.attributes.size.width + j] = cellCoords;
+        }
+    } 
+    console.log(this.freeCellsCoords);
 }
 
