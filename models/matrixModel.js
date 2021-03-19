@@ -21,15 +21,98 @@ function MatrixModel() {
     this.initFreeCellsArray();    
     this.base = 2;
     this.initCellsNumber = 2;
-    this.addRandomValues(this.initCellsNumber);    
+    this.addRandomValues(this.initCellsNumber);   
+    // this.displayActionResults('left'); 
 }
 
 MatrixModel.prototype = Object.create(BaseModel.prototype);
 MatrixModel.prototype.constructor = MatrixModel;
 
-MatrixModel.prototype.displayActionResults = function(key) {    
+MatrixModel.prototype.displayActionResults = function(key) {
+    var i, j,
+        grid = this.attributes.grid,
+        size = this.attributes.size,
+        isUniqueInRow,
+        shouldCellMove,
+        shouldCellMerge = false,
+        values = [],
+        currentCell,
+        distance = 0,
+        cellsBehind,
+        buffer,
+        newCell,
+        lastSignificantCell;
+
+
     console.log(key);
-    this.addRandomValues(this.initCellsNumber);
+    // this.addRandomValues(this.initCellsNumber);
+    if (key === 'left') {
+        for (i = 0; i < grid.length; i += 1) {
+            for (j = 0; j < grid[i].length; j += 1) { 
+                cellsBehind = size.width * i + j;
+                if (j === 0) {
+                    shouldCellMove = false;        
+                }
+                values.push({
+                            value: grid[i][j],
+                            shouldCellMove: shouldCellMove,
+                            distance: distance,
+                            shouldCellMerge: shouldCellMerge,
+                            pairToMergeRef: null,
+                            coords: [i, j]
+                });
+                currentCell = values[cellsBehind];
+                if (currentCell.value === '') {
+                    distance += 1;
+                    currentCell.shouldCellMove = false;
+                    shouldCellMove = true;
+                }
+                if (j > 0) {                    
+                    if (currentCell.value !== '' && !currentCell.shouldCellMove) {
+                        shouldCellMove = false;                      
+                    }
+                }
+                
+
+                if (lastSignificantCell) {
+                   if (currentCell.value === lastSignificantCell.value) {
+                    currentCell.shouldCellMerge = true;  
+                    currentCell.shouldCellMove = true;                  
+                    distance += 1;
+                    currentCell.distance = distance;
+                    currentCell.pairToMergeRef = lastSignificantCell;
+                    // lastSignificantCell = currentCell;
+                    // lastSignificantCell.pairToMergeRef = currentCell;
+                    } 
+                }
+                
+
+                if (currentCell.value !== '') {
+                    lastSignificantCell = currentCell;
+                }
+
+                
+
+                if (currentCell.shouldCellMove) {
+                    grid[i][j] = '';                   
+                    grid[i][j - currentCell.distance] = currentCell.value;
+                    if (currentCell.shouldCellMerge) {
+                        grid[i][j - currentCell.distance] = currentCell.value * this.base;
+                    }
+                }
+                
+                if (j === size.width - 1) {
+                    distance = 0;
+                    lastSignificantCell = null;
+                }
+                console.log(distance, currentCell.coords);
+                
+            }
+
+        }
+
+        console.log(values);
+    }
     this.publish('changeData');
 }
 
