@@ -29,6 +29,7 @@ function MatrixModel() {
     this.initFreeCellsArray();    
     this.base = 2;
     this.initCellsNumber = 2;
+    this.afterMoveCellsNumber = 1;
     this.addRandomValues(this.initCellsNumber);     
 }
 
@@ -112,7 +113,8 @@ MatrixModel.prototype.displayActionResults = function(key) {
         if (properties.shouldCellMove === true) {            
             grid[row][column] = '';
             destinationColumn = direction === 'left' ? column - properties.distance : column + properties.distance;
-            var newValue = properties.shouldCellMerge ? String(properties.value * context.base) : properties.value;
+            // var newValue = properties.shouldCellMerge ? String(properties.value * context.base) : properties.value;
+            var newValue = properties.shouldCellMerge ? String(Number(properties.value) + Number(properties.value)) : properties.value;
             grid[row][destinationColumn] = newValue;
             didCellsMove = true;
             //increase totalScore
@@ -235,7 +237,8 @@ MatrixModel.prototype.addRandomValues = function(initCellsNumber, didCellsMove) 
     }
     //at least 1 cell moved or it is initial render
     if (didCellsMove || didCellsMove === undefined) {
-        for (i = 0; i < initCellsNumber; i += 1) {                
+        var cellsNumber = didCellsMove === undefined ? initCellsNumber : this.afterMoveCellsNumber;
+        for (i = 0; i < cellsNumber; i += 1) {                
             freeCellIndex = getRandomFreeCellIndex();
             //checking if there are free cells
             if (freeCellIndex >= 0) {            
