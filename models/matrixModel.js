@@ -4,13 +4,19 @@ function MatrixModel() {
         size: {
             width: 4,
             height: 4
-        },
+        },    
         grid: [
             ['', '', '', ''],
             ['', '', '', ''],
             ['', '', '', ''],
             ['', '', '', '']
         ]
+        // grid: [
+        //     ['2', '2', '2', '2'],
+        //     ['2', '2', '2', '2'],
+        //     ['2', '2', '2', '2'],
+        //     ['2', '2', '2', '']
+        // ]
     }
 
     var instance = this;
@@ -21,98 +27,143 @@ function MatrixModel() {
     this.initFreeCellsArray();    
     this.base = 2;
     this.initCellsNumber = 2;
-    this.addRandomValues(this.initCellsNumber);   
-    // this.displayActionResults('left'); 
+    this.addRandomValues(this.initCellsNumber);     
 }
 
 MatrixModel.prototype = Object.create(BaseModel.prototype);
 MatrixModel.prototype.constructor = MatrixModel;
 
 MatrixModel.prototype.displayActionResults = function(key) {
-    var i, j,
+    var i, j, k,
         grid = this.attributes.grid,
-        size = this.attributes.size,
-        isUniqueInRow,
-        shouldCellMove,
-        shouldCellMerge = false,
-        values = [],
+        size = this.attributes.size,        
+        shouldNextCellMove = false,
+        shouldCellMerge = false,        
         currentCell,
-        distance = 0,
-        cellsBehind,
-        buffer,
-        newCell,
-        lastSignificantCell;
+        distance = 0,        
+        lastSignificantCell,
+        occupiedCellIndex = -1,
+        lastColumnIndex,
+        context = this,
+        destinationColumn;           
 
+    invertMatrix = function() {                
+        for (i = 0; i < grid.length; i += 1) {          
+            for (j = i + 1; j < grid.length; j += 1) {
+                k = grid[i][j];                
+                grid[i][j] = grid[j][i];                
+                grid[j][i] = k;                
+            }
+        }
+    }
+        
+    moveCell = function(row, column, direction, isMatrixTurned) {                
+        currentCell = {
+            value: grid[row][column],
+            shouldCellMove: shouldNextCellMove,
+            distance: distance,
+            shouldCellMerge: shouldCellMerge,
+            pairToMergeRef: null,
+            coords: [row, column]
+        };
+        cells.push(currentCell);                
 
-    console.log(key);
-    // this.addRandomValues(this.initCellsNumber);
-    if (key === 'left') {
-        for (i = 0; i < grid.length; i += 1) {
-            for (j = 0; j < grid[i].length; j += 1) { 
-                cellsBehind = size.width * i + j;
-                if (j === 0) {
-                    shouldCellMove = false;        
-                }
-                values.push({
-                            value: grid[i][j],
-                            shouldCellMove: shouldCellMove,
-                            distance: distance,
-                            shouldCellMerge: shouldCellMerge,
-                            pairToMergeRef: null,
-                            coords: [i, j]
-                });
-                currentCell = values[cellsBehind];
-                if (currentCell.value === '') {
-                    distance += 1;
-                    currentCell.shouldCellMove = false;
-                    shouldCellMove = true;
-                }
-                if (j > 0) {                    
-                    if (currentCell.value !== '' && !currentCell.shouldCellMove) {
-                        shouldCellMove = false;                      
-                    }
-                }
-                
+        if (currentCell.value === '') {
+            distance += 1;
+            currentCell.shouldCellMove = false;
+            shouldNextCellMove = true;
+        }                
 
-                if (lastSignificantCell) {
-                   if (currentCell.value === lastSignificantCell.value) {
-                    currentCell.shouldCellMerge = true;  
-                    currentCell.shouldCellMove = true;                  
-                    distance += 1;
-                    currentCell.distance = distance;
-                    currentCell.pairToMergeRef = lastSignificantCell;
-                    // lastSignificantCell = currentCell;
-                    // lastSignificantCell.pairToMergeRef = currentCell;
-                    } 
-                }
-                
-
-                if (currentCell.value !== '') {
-                    lastSignificantCell = currentCell;
-                }
-
-                
-
-                if (currentCell.shouldCellMove) {
-                    grid[i][j] = '';                   
-                    grid[i][j - currentCell.distance] = currentCell.value;
-                    if (currentCell.shouldCellMerge) {
-                        grid[i][j - currentCell.distance] = currentCell.value * this.base;
-                    }
-                }
-                
-                if (j === size.width - 1) {
-                    distance = 0;
-                    lastSignificantCell = null;
-                }
-                console.log(distance, currentCell.coords);
-                
+        if (lastSignificantCell) {
+            if (currentCell.value === lastSignificantCell.value && !lastSignificantCell.shouldCellMerge) {
+                currentCell.shouldCellMerge = true;                        
+                distance += 1;
+                currentCell.distance = distance;
+                currentCell.pairToMergeRef = lastSignificantCell;
+                shouldNextCellMove = true;
+                currentCell.shouldCellMove = shouldNextCellMove;
+            } 
+        }
+        
+        if (currentCell.value !== '') {
+            lastSignificantCell = currentCell;
+        }
+                       
+        if (currentCell.shouldCellMove === true) {
+            grid[row][column] = '';
+            if (isMatrixTurned) {
+                context.freeCellsCoords.push([column, row]);
+            } else {
+                context.freeCellsCoords.push([row, column]); 
+            }                        
+            destinationColumn = direction === 'left' ? column - currentCell.distance : column + currentCell.distance;            
+            grid[row][destinationColumn] = currentCell.value;                                       
+            
+            //search for the index of the coordinates of the cell that will be occupied                                        
+            for (k = 0; k < context.freeCellsCoords.length; k += 1) {
+                if (context.freeCellsCoords[k][0] === row && context.freeCellsCoords[k][1] === destinationColumn && !isMatrixTurned) {
+                    occupiedCellIndex = k;
+                } else if (context.freeCellsCoords[k][0] === destinationColumn && context.freeCellsCoords[k][1] === row && isMatrixTurned) {
+                    occupiedCellIndex = k;
+                } 
             }
 
-        }
+            if (occupiedCellIndex !== -1) {
+                context.freeCellsCoords.splice(occupiedCellIndex, 1);
+                occupiedCellIndex = -1;                        
+            }                                        
 
-        console.log(values);
-    }
+            if (currentCell.shouldCellMerge) {
+                grid[row][destinationColumn] = String(currentCell.value * context.base);
+            }
+        }
+        
+        lastColumnIndex = direction === 'left' ? size.width - 1 : 0;
+
+        if (column === lastColumnIndex) {
+            distance = 0;
+            lastSignificantCell = null;
+        }        
+    }    
+    
+    switch (key) {
+        case 'left':                        
+            for (i = 0; i < grid.length; i += 1) {
+                for (j = 0; j < grid[i].length; j += 1) {                                 
+                    moveCell(i, j, 'left');
+                }
+            }        
+            break;
+        case 'right':
+            for (i = 0; i < grid.length; i += 1) {
+                for (j = grid[i].length - 1; j > -1 ; j -= 1) {
+                    moveCell(i, j, 'right');
+                }
+            }
+            break;
+        case 'up':  
+            invertMatrix();
+            for (i = 0; i < grid.length; i += 1) {
+                for (j = 0; j < grid[i].length; j += 1) {
+                    moveCell(i, j, 'left', true);
+                }
+            }            
+            invertMatrix();
+            break;
+        case 'down':
+            invertMatrix();
+            for (i = 0; i < grid.length; i += 1) {
+                for (j = grid[i].length - 1; j > -1 ; j -= 1) {
+                    moveCell(i, j, 'right', true);
+                }
+            }
+            invertMatrix();
+            break;                   
+        default:
+            console.error('wrong direction value!');
+            break;
+    }    
+    this.addRandomValues(this.initCellsNumber);
     this.publish('changeData');
 }
 
@@ -124,7 +175,7 @@ MatrixModel.prototype.startNewGame = function() {
 
 MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
     var row, column, i, freeCellIndex, randomValue, value, 
-        chance = 0.5, //first value drop chance
+        chance = 1, //first value drop chance
         randomRangeOffset = 1;
 
     var context = this;
@@ -141,8 +192,8 @@ MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
     for (i = 0; i < initCellsNumber; i += 1) {                
         freeCellIndex = getRandomFreeCellIndex();
         //in case if user will continue pushing arrow buttons after defeat
-        if (freeCellIndex >= 0) {
-           [row, column] = context.freeCellsCoords[freeCellIndex]; 
+        if (freeCellIndex >= 0) {            
+            [row, column] = context.freeCellsCoords[freeCellIndex]; 
         } else {
             console.error('defeat!');
             return;
@@ -156,11 +207,11 @@ MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
             value = Math.ceil(randomValue + randomRangeOffset) * context.base;
         }
         
-        context.attributes.grid[row][column] = value;        
+        context.attributes.grid[row][column] = String(value);        
 
         //delete 1 current item from freeCellsCoords array
-        context.freeCellsCoords.splice(freeCellIndex, 1);
-    } 
+        context.freeCellsCoords.splice(freeCellIndex, 1);                                
+    }         
 }
 
 MatrixModel.prototype.clearMatrix = function() {
@@ -176,13 +227,14 @@ MatrixModel.prototype.clearMatrix = function() {
 MatrixModel.prototype.initFreeCellsArray = function() {
     //Needed to detect defeat    
     this.freeCellsCoords = new Array(this.attributes.size.height * this.attributes.size.width);
-    var i, j, cellCoords;
+    this.freeCellsCoords = new Array();
+    var i, j, cellCoords;    
     for (i = 0; i < this.attributes.size.height; i += 1) {
-        for (j = 0; j < this.attributes.size.width; j += 1) {
-            cellCoords = [i, j];             
-            this.freeCellsCoords[i * this.attributes.size.width + j] = cellCoords;
+        for (j = 0; j < this.attributes.size.width; j += 1) {                        
+            if (this.attributes.grid[i][j] === '') {                
+                cellCoords = [i, j];
+                this.freeCellsCoords.push(cellCoords);
+            }             
         }
-    } 
-    console.log(this.freeCellsCoords);
+    }                   
 }
-
