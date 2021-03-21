@@ -5,18 +5,18 @@ function MatrixModel() {
             width: 4,
             height: 4
         },    
-        grid: [
-            ['', '', '', ''],
-            ['', '', '', ''],
-            ['', '', '', ''],
-            ['', '', '', '']
-        ]
         // grid: [
-        //     ['2', '2', '2', '2'],
-        //     ['2', '2', '2', '2'],
-        //     ['2', '2', '2', '2'],
-        //     ['2', '2', '2', '']
+        //     ['', '', '', ''],
+        //     ['', '', '', ''],
+        //     ['', '', '', ''],
+        //     ['', '', '', '']
         // ]
+        grid: [
+            ['2', '2', '2', '2'],
+            ['2', '2', '2', '2'],
+            ['2', '2', '2', '2'],
+            ['2', '2', '2', '']
+        ]
     }
 
     var instance = this;
@@ -56,38 +56,52 @@ MatrixModel.prototype.displayActionResults = function(key) {
             }
         }
     }
-        
-    moveCell = function(row, column, direction, isMatrixTurned) {                
-        currentCell = {
+
+    createCell = function(row, column){                
+        var cell = {
             value: grid[row][column],
             shouldCellMove: shouldNextCellMove,
             distance: distance,
-            shouldCellMerge: shouldCellMerge,
-            pairToMergeRef: null,
-            coords: [row, column]
-        };
-        cells.push(currentCell);                
+            shouldCellMerge: shouldCellMerge
+        }
 
-        if (currentCell.value === '') {
+        if (cell.value === '') {
             distance += 1;
-            currentCell.shouldCellMove = false;
+            cell.shouldCellMove = false;
             shouldNextCellMove = true;
         }                
 
         if (lastSignificantCell) {
-            if (currentCell.value === lastSignificantCell.value && !lastSignificantCell.shouldCellMerge) {
-                currentCell.shouldCellMerge = true;                        
+            if (cell.value === lastSignificantCell.value && !lastSignificantCell.shouldCellMerge) {
+                cell.shouldCellMerge = true;
                 distance += 1;
-                currentCell.distance = distance;
-                currentCell.pairToMergeRef = lastSignificantCell;
+                cell.distance = distance;
                 shouldNextCellMove = true;
-                currentCell.shouldCellMove = shouldNextCellMove;
+                cell.shouldCellMove = shouldNextCellMove;
             } 
         }
         
-        if (currentCell.value !== '') {
-            lastSignificantCell = currentCell;
+        if (cell.value !== '') {
+            lastSignificantCell = cell;
         }
+
+        return cell;
+    }
+
+    getFreeCellIndex = function(row, destinationColumn, isMatrixTurned) {
+        //search for the index of the coordinates of the cell that will be occupied                                        
+        for (k = 0; k < context.freeCellsCoords.length; k += 1) {
+            if (context.freeCellsCoords[k][0] === row && context.freeCellsCoords[k][1] === destinationColumn && !isMatrixTurned) {
+                return k;
+            } else if (context.freeCellsCoords[k][0] === destinationColumn && context.freeCellsCoords[k][1] === row && isMatrixTurned) {
+                return k;
+            } 
+        }
+        return -1;
+    }
+        
+    moveCell = function(row, column, direction, isMatrixTurned) {                
+        currentCell = createCell(row, column);
                        
         if (currentCell.shouldCellMove === true) {
             grid[row][column] = '';
@@ -99,14 +113,7 @@ MatrixModel.prototype.displayActionResults = function(key) {
             destinationColumn = direction === 'left' ? column - currentCell.distance : column + currentCell.distance;            
             grid[row][destinationColumn] = currentCell.value;                                       
             
-            //search for the index of the coordinates of the cell that will be occupied                                        
-            for (k = 0; k < context.freeCellsCoords.length; k += 1) {
-                if (context.freeCellsCoords[k][0] === row && context.freeCellsCoords[k][1] === destinationColumn && !isMatrixTurned) {
-                    occupiedCellIndex = k;
-                } else if (context.freeCellsCoords[k][0] === destinationColumn && context.freeCellsCoords[k][1] === row && isMatrixTurned) {
-                    occupiedCellIndex = k;
-                } 
-            }
+            occupiedCellIndex = getFreeCellIndex(row, destinationColumn, isMatrixTurned);
 
             if (occupiedCellIndex !== -1) {
                 context.freeCellsCoords.splice(occupiedCellIndex, 1);
@@ -124,8 +131,8 @@ MatrixModel.prototype.displayActionResults = function(key) {
             distance = 0;
             lastSignificantCell = null;
         }        
-    }    
-    
+    }
+        
     switch (key) {
         case 'left':                        
             for (i = 0; i < grid.length; i += 1) {
@@ -175,7 +182,7 @@ MatrixModel.prototype.startNewGame = function() {
 
 MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
     var row, column, i, freeCellIndex, randomValue, value, 
-        chance = 1, //first value drop chance
+        chance = 0.5, //first value drop chance
         randomRangeOffset = 1;
 
     var context = this;
@@ -193,8 +200,9 @@ MatrixModel.prototype.addRandomValues = function(initCellsNumber) {
         freeCellIndex = getRandomFreeCellIndex();
         //in case if user will continue pushing arrow buttons after defeat
         if (freeCellIndex >= 0) {            
-            [row, column] = context.freeCellsCoords[freeCellIndex]; 
-        } else {
+            [row, column] = context.freeCellsCoords[freeCellIndex];
+        //no more free cells
+        } else if (i === 0) {
             console.error('defeat!');
             return;
         }
