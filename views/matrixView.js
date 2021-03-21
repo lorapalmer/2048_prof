@@ -43,4 +43,6 @@ MatrixView.prototype.beforeUpdate = function() {
 MatrixView.prototype.afterUpdate = function() {    
     var newGameButton = document.getElementById('newGameBtn');
     newGameButton.addEventListener('click', this.controller.onClickNewGame.bind(this.controller));
+    var defeatModal = document.getElementById('defeat-modal');    
+    defeatModal.classList = this.matrixModel.canContinue ? 'inActive' : 'active';    
 }
