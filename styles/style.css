@@ -31,3 +31,21 @@ body {
     background-color: #ffc107;
     font-size: 19px;
 }
+
+#defeat-modal {
+    position: absolute;
+    font-size: 5rem;
+    color: #c76060;    
+    width: 99%;
+    text-align: center;    
+    font-weight: bolder;
+    margin-top: 1rem;
+}
+
+.inActive {
+    display: none;
+}
+
+.active {
+    display: block;
+}

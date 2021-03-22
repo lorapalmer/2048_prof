@@ -14,6 +14,8 @@ MatrixView.prototype.beforeRender = function () {
 }
 
 MatrixView.prototype.render = function() {
+    console.log('render');
+    
     var i, j, attributes = this.matrixModel.attributes, str = '';
 
     for(i = 0; i < attributes.size.width; i += 1) {
@@ -30,5 +32,17 @@ MatrixView.prototype.render = function() {
 MatrixView.prototype.afterRender = function () {
     window.onkeydown = this.controller.onKeyPress.bind(this.controller);
     var newGameButton = document.getElementById('newGameBtn');
+    newGameButton.addEventListener('click', this.controller.onClickNewGame.bind(this.controller));        
+}
+
+MatrixView.prototype.beforeUpdate = function() {    
+    var newGameButton = document.getElementById('newGameBtn');
+    newGameButton.removeEventListener('click', this.controller.onClickNewGame);
+}
+
+MatrixView.prototype.afterUpdate = function() {    
+    var newGameButton = document.getElementById('newGameBtn');
     newGameButton.addEventListener('click', this.controller.onClickNewGame.bind(this.controller));
+    var defeatModal = document.getElementById('defeat-modal');    
+    defeatModal.classList = this.matrixModel.canContinue ? 'inActive' : 'active';    
 }
