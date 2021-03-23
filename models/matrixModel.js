@@ -17,8 +17,7 @@ function MatrixModel() {
             height: 4
         }              
     }
-    this.attributes.grid = createMatrix(this.attributes.size.height, this.attributes.size.width);
-    console.table(this.attributes.grid);        
+    this.attributes.grid = createMatrix(this.attributes.size.height, this.attributes.size.width);     
 
     var instance = this;
     MatrixModel = function () {
@@ -43,7 +42,6 @@ MatrixModel.prototype.displayActionResults = function(key) {
         shouldNextCellMove = false,                        
         distance = 0,        
         lastSignificantCellProps,
-        occupiedCellIndex = -1,
         lastColumnIndex,
         context = this,
         destinationColumn,
@@ -65,13 +63,11 @@ MatrixModel.prototype.displayActionResults = function(key) {
             context.freeCellsCoords.push([column, row]);
         } else {
             context.freeCellsCoords.push([row, column]); 
-        }                                                
-        occupiedCellIndex = getFreeCellIndex(row, destinationColumn, isMatrixTurned);
-        //when the cells should merge, then the second no longer needs to occupy a new cell
-        if (occupiedCellIndex !== -1) {
-            context.freeCellsCoords.splice(occupiedCellIndex, 1);
-            occupiedCellIndex = -1;                        
-        }
+        }   
+        var occupiedCell = !isMatrixTurned ? [row, destinationColumn] : [destinationColumn, row];        
+        context.freeCellsCoords = context.freeCellsCoords.filter(function(cellCoords){            
+            return cellCoords[0] !== occupiedCell[0] || cellCoords[1] !== occupiedCell[1];
+        });
     }
 
     function Cell(row, column) {
@@ -112,8 +108,7 @@ MatrixModel.prototype.displayActionResults = function(key) {
                        
         if (properties.shouldCellMove === true) {            
             grid[row][column] = '';
-            destinationColumn = direction === 'left' ? column - properties.distance : column + properties.distance;
-            // var newValue = properties.shouldCellMerge ? String(properties.value * context.base) : properties.value;
+            destinationColumn = direction === 'left' ? column - properties.distance : column + properties.distance;            
             var newValue = properties.shouldCellMerge ? String(Number(properties.value) + Number(properties.value)) : properties.value;
             grid[row][destinationColumn] = newValue;
             didCellsMove = true;
@@ -129,18 +124,6 @@ MatrixModel.prototype.displayActionResults = function(key) {
             lastSignificantCellProps = null;
             shouldNextCellMove = false;
         }                
-    }
-
-    getFreeCellIndex = function(row, destinationColumn, isMatrixTurned) {
-        //search for the index of the coordinates of the cell that will be occupied                                        
-        for (k = 0; k < context.freeCellsCoords.length; k += 1) {
-            if (context.freeCellsCoords[k][0] === row && context.freeCellsCoords[k][1] === destinationColumn && !isMatrixTurned) {
-                return k;
-            } else if (context.freeCellsCoords[k][0] === destinationColumn && context.freeCellsCoords[k][1] === row && isMatrixTurned) {
-                return k;
-            } 
-        }
-        return -1;
     }
         
     switch (key) {

@@ -15,10 +15,7 @@ SummaryModel.prototype = Object.create(BaseModel.prototype);
 SummaryModel.prototype.constructor = SummaryModel;
 
 SummaryModel.prototype.add = function(newValue) {
-    // var totalScore = this.attributes.totalScore;
-    // var bestScore = this.attributes.bestScore;
     this.attributes.totalScore += newValue;
-    // totalScore += newValue;
     if (this.attributes.bestScore < this.attributes.totalScore){
         this.attributes.bestScore = this.attributes.totalScore;
         window.localStorage.setItem('bestScore', this.attributes.bestScore);
